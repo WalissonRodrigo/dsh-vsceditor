@@ -1,0 +1,11 @@
+# dsh-vsceditor — embedded code-server (full VSCode) panel for DSH.
+# Self-inserting bundle patch: the profile boot merges this file when
+# `dsh-vsceditor` is listed in the profile's `dsh.profile.bundles`.
+#
+# The row is host-plane on purpose: it consumes host services
+# (webServer / subprocess / timer) and publishes nothing; one process-global
+# instance observes every session's write/edit tool calls (unscoped listeners
+# receive scoped tool events) and manages the single code-server process.
+- insert:
+    - id: vsceditor
+      name: dsh-vsceditor

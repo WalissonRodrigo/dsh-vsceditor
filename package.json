@@ -14,10 +14,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_GITHUB_USERNAME/dsh-vsceditor.git"
+    "url": "git+https://github.com/k-ying/dsh-vsceditor.git"
   },
-  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/dsh-vsceditor#readme",
-  "bugs": "https://github.com/YOUR_GITHUB_USERNAME/dsh-vsceditor/issues",
+  "homepage": "https://github.com/k-ying/dsh-vsceditor#readme",
+  "bugs": "https://github.com/k-ying/dsh-vsceditor/issues",
   "main": "lib/host.js",
   "exports": {
     ".": "./lib/host.js",

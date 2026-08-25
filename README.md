@@ -50,7 +50,7 @@
 ### 方式 A：从 GitHub 安装（推荐）
 
 ```sh
-dsh plugin --profile web add github:YOUR_GITHUB_USERNAME/dsh-vsceditor
+dsh plugin --profile web add github:k-ying/dsh-vsceditor
 ```
 
 `dsh plugin add` 会把包加进 `~/.dsh/profiles/web/package.json` 的依赖并自动登记到 `dsh.profile.bundles`（本插件通过 `cordis.patch.yml` 自挂载，无需手工编辑组合文件）。
@@ -58,7 +58,7 @@ dsh plugin --profile web add github:YOUR_GITHUB_USERNAME/dsh-vsceditor
 ### 方式 B：本地目录安装
 
 ```sh
-git clone https://github.com/YOUR_GITHUB_USERNAME/dsh-vsceditor.git
+git clone https://github.com/k-ying/dsh-vsceditor.git
 dsh plugin --profile web add /path/to/dsh-vsceditor
 ```
 

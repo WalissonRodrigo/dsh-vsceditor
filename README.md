@@ -82,6 +82,30 @@ sh ~/.dsh/profiles/web/node_modules/dsh-vsceditor/scripts/install-code-server.sh
 
 目录下需存在 `code-server/bin/code-server`。
 
+#### Windows（实验性）
+
+code-server 官方[不发布 Windows 构建](https://github.com/coder/code-server/issues/1397)，且直接 `npm install -g code-server` 在 Windows 上是坏的（postinstall 脚本与 argon2 原生编译都会失败）。本插件提供 `scripts/install-code-server.ps1` 绕过这两个坑，手法参考 [naspenang/code-server-windows](https://github.com/naspenang/code-server-windows)（MIT）：跳过 postinstall、手动补装依赖、**从本机已安装的桌面版 VS Code 借用原生模块**。
+
+前置条件：
+
+- Windows 10/11 + PowerShell
+- 已安装**桌面版 VS Code**，且版本与 code-server 内置的 VS Code **完全一致**（脚本会校验并报出期望版本，可用 `-CodeServerVersion` 换 code-server 版本来对齐，或加 `-SkipVSCodeVersionCheck` 强行尝试）
+
+```powershell
+cd <你的 DSH 工作区>
+Set-ExecutionPolicy -Scope Process Bypass
+& "$env:USERPROFILE\.dsh\profiles\web\node_modules\dsh-vsceditor\scripts\install-code-server.ps1"
+```
+
+产物布局（host 端在 Windows 下按此约定查找）：
+
+```
+<工作区>\.dsh-editor\code-server\node\node.exe
+<工作区>\.dsh-editor\code-server\runtime\node_modules\code-server\out\node\entry.js
+```
+
+注意：此路径未经大规模验证，仅保证 127.0.0.1 本机使用。若遇到问题，**WSL2 里是官方维护的 Linux 流程**，体验与 macOS/Linux 完全一致，是更稳妥的选择。
+
 ### 启动
 
 ```sh

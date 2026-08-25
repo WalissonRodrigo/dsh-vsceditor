@@ -64,21 +64,27 @@ dsh plugin --profile web add /path/to/dsh-vsceditor
 
 ### 安装 code-server
 
-插件本体不带 code-server 运行时（约 100MB），首次使用前装一次：
+插件本体不带 code-server 运行时（约 100MB），首次使用前装一次。**推荐全局安装，所有工作区共用一份**：
+
+```sh
+sh ~/.dsh/profiles/web/node_modules/dsh-vsceditor/scripts/install-code-server.sh ~/.dsh-editor
+```
+
+如果想让某个工作区用独立的 code-server，不传参数即可（默认装到当前目录的 `.dsh-editor`，优先级高于全局）：
 
 ```sh
 cd <你的 DSH 工作区>   # 例如 ~/Documents/AI
 sh ~/.dsh/profiles/web/node_modules/dsh-vsceditor/scripts/install-code-server.sh
 ```
 
-脚本按平台（macOS arm64/x64、Linux x64/arm64/armhf）从 code-server 官方 release 下载并解压到 `<工作区>/.dsh-editor/code-server`。版本固定为 4.133.0，可用 `DSH_VSCEDITOR_VERSION` 环境变量覆盖。
+脚本按平台（macOS arm64/x64、Linux x64/arm64/armhf）从 code-server 官方 release 下载并解压。版本固定为 4.133.0，可用 `DSH_VSCEDITOR_VERSION` 环境变量覆盖。
 
 手动安装也可以：把 code-server 解压到以下任一位置（按查找优先级）：
 
 1. 设置卡片里填写的 `code-server 目录`（优先级最高）
 2. 环境变量 `$DSH_VSCEDITOR_HOME`
-3. `<工作区>/.dsh-editor`
-4. `~/.dsh-editor`
+3. `<工作区>/.dsh-editor`（工作区级）
+4. `~/.dsh-editor`（全局，推荐）
 
 目录下需存在 `code-server/bin/code-server`。
 

@@ -163,11 +163,29 @@ function encodePath(p) { return '/' + p.split('/').map(encodeURIComponent).join(
 const snapshots = new SnapshotProvider();
 
 // ---------- host -> ext message handlers ----------
+// 去重：同一份编辑帧在 30s 窗口内只处理一次。SSE 重连、多路径投递都不应
+// 让同一个 diff 反复弹出抢走用户当前页签。
+let lastEditKey = '';
+let lastEditAt = 0;
+function editKeyOf(msg) {
+  const t = typeof msg.newText === 'string' ? msg.newText : '';
+  let h = 0;
+  for (let i = 0; i < t.length; i += 97) h = (h * 31 + t.charCodeAt(i)) | 0;
+  return msg.path + '|' + t.length + '|' + h;
+}
 async function onEdit(msg) {
   const fsPath = msg.path;
   dbg('onEdit start, follow=' + state.follow);
   snapshots.set(fsPath, typeof msg.oldText === 'string' ? msg.oldText : '');
   state.lastKnown.set(fsPath, typeof msg.newText === 'string' ? msg.newText : state.lastKnown.get(fsPath));
+  const key = editKeyOf(msg);
+  if (key === lastEditKey && Date.now() - lastEditAt < 30000) {
+    dbg('onEdit dedup skip for ' + fsPath);
+    post({ type: 'ack', kind: 'edit', path: fsPath, follow: state.follow, dedup: true });
+    return;
+  }
+  lastEditKey = key;
+  lastEditAt = Date.now();
   if (!state.follow) { post({ type: 'ack', kind: 'edit', path: fsPath, follow: false }); return; }
   try {
     const left = snapUri(fsPath);
@@ -269,6 +287,9 @@ function connectSSE() {
   if (state.sseReq) { try { state.sseReq.destroy(); } catch (e) {} state.sseReq = null; }
   const u = new URL(target);
   u.search = (u.search ? u.search + '&' : '?') + 'token=' + encodeURIComponent(bridge.token);
+  // 只有内嵌模式（code-server，每次开编辑器页签都是全新的扩展宿主）才请求
+  // 重放最后一次编辑；桌面 VS Code 任何重连都不应再把旧 diff 弹出来抢焦点。
+  if (bridge.mode === 'embedded') u.search += '&replay=1';
   const req = http.get({
     hostname: u.hostname,
     port: u.port,
@@ -308,8 +329,8 @@ function connectSSE() {
         }
       }
     });
-    res.on('end', () => { state.connected = false; updateStatus(); scheduleReconnect(); });
-    res.on('error', () => { state.connected = false; updateStatus(); scheduleReconnect(); });
+    res.on('end', () => { state.connected = false; updateStatus(); log('SSE 流结束（对端关闭），将重连'); scheduleReconnect(); });
+    res.on('error', (e) => { state.connected = false; updateStatus(); log('SSE 流错误：' + (e && e.message ? e.message : String(e))); scheduleReconnect(); });
   });
   req.on('error', (e) => {
     state.connected = false;

@@ -1,5 +1,9 @@
 # dsh-vsceditor
 
+![dsh-vsceditor banner](assets/banner.svg)
+
+中文 | **[English](README.en.md)**
+
 **DeepSeek Harness 内嵌 VSCode 编辑器插件** —— 在 DSH Web 界面里嵌入一个完整的 code-server（完整版 VSCode），agent 每次写文件/改文件时自动在编辑器里弹出红绿 diff 并定位到改动行，所见即所得地"看着 AI 干活"。
 
 ## 1. 特性

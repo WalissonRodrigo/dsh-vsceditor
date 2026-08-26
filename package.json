@@ -28,6 +28,7 @@
     "lib",
     "vscode-ext/dsh-bridge",
     "scripts",
+    "assets",
     "cordis.patch.yml"
   ],
   "scripts": {

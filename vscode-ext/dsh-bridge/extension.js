@@ -98,6 +98,19 @@ function maybePromptWorkspace() {
   });
 }
 
+// 受限模式（Workspace Trust）：扩展声明了 limited 支持，未信任时仍能激活，
+// 保持连接并向 DSH 上报 trusted:false，但不接收 edit/reveal；信任后自动恢复。
+function isTrusted() { return bridge.mode !== 'desktop' || vscode.workspace.isTrusted; }
+let trustPrompted = false;
+function maybePromptTrust() {
+  if (trustPrompted || vscode.workspace.isTrusted) return;
+  trustPrompted = true;
+  log('工作区未信任（受限模式），等待用户信任…');
+  vscode.window.showWarningMessage('DSH 桥接：当前工作区处于受限模式，信任后才会同步 DSH 的编辑。', '管理工作区信任').then((pick) => {
+    if (pick) vscode.commands.executeCommand('workbench.trust.manage');
+  });
+}
+
 function log(msg) {
   console.log('[dsh-bridge] ' + msg);
   fileLog(msg);
@@ -207,6 +220,8 @@ async function onReveal(msg) {
 
 function handleMessage(msg) {
   if (!msg || typeof msg.type !== 'string') return;
+  // 受限模式下只维护状态，不执行任何编辑/跳转指令。
+  if (!isTrusted() && (msg.type === 'edit' || msg.type === 'reveal')) return;
   dbg('recv: ' + msg.type + (msg.path ? ' ' + msg.path : ''));
   switch (msg.type) {
     case 'hello':
@@ -269,11 +284,13 @@ function connectSSE() {
     }
     state.connected = true;
     updateStatus();
-    log('SSE 已连接 ' + target);
+    log('SSE 已连接 ' + target + (isTrusted() ? '' : '（受限模式：仅上报状态）'));
+    if (!isTrusted()) { setStatus(true, '受限模式'); maybePromptTrust(); }
     post({
       type: 'ready',
       version: EXT_VERSION,
       mode: bridge.mode,
+      trusted: vscode.workspace.isTrusted,
       workspace: (vscode.workspace.workspaceFolders || []).map((f) => f.uri.fsPath).join(','),
     });
     let buf = '';
@@ -387,6 +404,12 @@ function activate(context) {
   // opened via the "打开该工作区" prompt reconnects on its own).
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
     if (bridge.mode === 'desktop') connectSSE();
+  }));
+  // 信任授予后重连：重发 ready（trusted:true），恢复接收编辑同步。
+  context.subscriptions.push(vscode.workspace.onDidGrantWorkspaceTrust(() => {
+    log('已获得工作区信任');
+    trustPrompted = false;
+    connectSSE();
   }));
 
   updateStatus();

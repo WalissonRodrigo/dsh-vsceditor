@@ -223,6 +223,10 @@ dsh-vsceditor/
 dsh --profile web --dump-config
 ```
 
+### 版本号规范
+
+插件（根 `package.json`）与桥扩展（`vscode-ext/dsh-bridge/package.json`）的版本号保持 **major.minor 一致**——例如插件 `0.3.x` 配套扩展 `0.3.x`；两者的 patch 位可独立递增。host 端会把扩展版本与插件内置版本（`vscode-ext/dsh-bridge/package.json` 的 `version`）比对，不一致时自动重新拷贝到 `~/.vscode/extensions/` 并提示 Reload Window，所以升级插件后无需手动重装扩展。
+
 ## License
 
 [MIT](LICENSE)

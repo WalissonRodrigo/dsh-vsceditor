@@ -10,7 +10,7 @@
 // Transport: SSE (host -> extension) + HTTP POST (extension -> host).
 // Message shapes are modeled on ACP session/update semantics:
 //   host -> ext:  hello | follow | edit | lock | unlock | reveal
-//   ext  -> host: ready | ack | log
+//   ext  -> host: ready | ack | set-follow | log
 const vscode = require('vscode');
 const http = require('http');
 const fs = require('fs');
@@ -339,8 +339,8 @@ function updateStatus(note) {
   const mode = state.follow ? '跟随' : '编辑';
   state.statusBar.text = conn + ' · ' + mode + (note ? ' · ' + note : '');
   state.statusBar.tooltip = state.connected
-    ? 'DSH Bridge 已连接（' + (state.follow ? '跟随模式：只读+diff' : '编辑模式：锁定 DSH 占用文件') + '）'
-    : 'DSH Bridge 未连接，点击重连';
+    ? 'DSH Bridge 已连接（' + (state.follow ? '跟随模式：只读+diff' : '编辑模式：锁定 DSH 占用文件') + '）· 点击切换跟随/重连'
+    : 'DSH Bridge 未连接，点击打开菜单';
 }
 
 // ---------- edit protection ----------
@@ -374,12 +374,35 @@ function activate(context) {
   );
 
   state.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  state.statusBar.command = 'dsh-bridge.reconnect';
+  state.statusBar.command = 'dsh-bridge.menu';
   state.statusBar.show();
   context.subscriptions.push(state.statusBar);
 
   context.subscriptions.push(vscode.commands.registerCommand('dsh-bridge.reconnect', () => {
     connectSSE();
+  }));
+
+  // 反向切换跟随：POST 给 host 走统一配置写入，host 广播 follow 后
+  // 所有端（含本扩展）同步，状态栏文字随之更新。
+  context.subscriptions.push(vscode.commands.registerCommand('dsh-bridge.toggleFollow', () => {
+    post({ type: 'set-follow', enabled: !state.follow });
+    vscode.window.setStatusBarMessage(
+      state.follow ? '已请求关闭跟随（host 确认后生效）' : '已请求开启跟随（host 确认后生效）', 2000);
+  }));
+
+  // 状态栏点击菜单：切换跟随 / 重新连接。
+  context.subscriptions.push(vscode.commands.registerCommand('dsh-bridge.menu', async () => {
+    const pick = await vscode.window.showQuickPick([
+      {
+        id: 'follow',
+        label: (state.follow ? '$(check) ' : '$(close) ') + '跟随模式',
+        description: state.follow ? '当前：开（只读 + 自动弹 diff），点击关闭' : '当前：关，点击开启',
+      },
+      { id: 'reconnect', label: '$(debug-restart) 重新连接 DSH', description: state.connected ? '已连接' : '未连接' },
+    ]);
+    if (!pick) return;
+    if (pick.id === 'follow') vscode.commands.executeCommand('dsh-bridge.toggleFollow');
+    else connectSSE();
   }));
 
   // Track authoritative content; revert edits on protected docs.

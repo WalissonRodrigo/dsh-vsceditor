@@ -158,7 +158,9 @@ dsh web
 默认开启。agent 每次 `write`/`edit` 落地后：
 
 - 编辑器自动切到该文件的 diff 视图（左旧右新），并滚动到首个改动行
-- 编辑器标签页的工具栏可以随时关掉「跟随」勾选框；关掉后仍会记录最近改动（recent 列表），只是不主动弹窗
+- DSH 标签页工具栏的「跟随」勾选框可随时开关；关掉后仍会记录最近改动（recent 列表），只是不主动弹窗
+- **编辑器内也能切换**：点击 VS Code 状态栏的 `DSH · 跟随/编辑` 按钮弹出菜单（切换跟随 / 重新连接），或命令面板 → `DSH Bridge: Toggle Follow Mode`；扩展会把请求发回 DSH，所有端同步生效
+- 只想看工作区内的改动：设置卡片勾选「仅跟随工作区内文件」，工作区外的写入只进 recent 列表，不弹 diff
 
 ### 5.3 文件锁定
 
@@ -172,6 +174,7 @@ agent 开始写某文件时该文件在编辑器里变为只读（状态栏有�
 |---|---|---|---|
 | `editorBackend` | string | `embedded` | 编辑器后端：`embedded` = 内嵌 code-server；`local` = 本机桌面版 VS Code |
 | `follow` | boolean | `true` | 跟随 DSH 编辑：改文件时自动弹出红绿 diff 并定位改动行 |
+| `followWorkspaceOnly` | boolean | `false` | 仅跟随工作区内文件：开启后工作区外的改动只记录、不弹 diff |
 | `autoStart` | boolean | `true` | DSH 启动后自动拉起 code-server；关闭后需在「编辑器」标签页手动启动 |
 | `port` | number | `0` | code-server 监听端口；`0` = 随机（18200–18900）；改动会自动重启编辑器 |
 | `codeServerHome` | string | `""` | 手动指定 code-server 安装目录；留空按上面的优先级自动查找 |
@@ -181,7 +184,10 @@ agent 开始写某文件时该文件在编辑器里变为只读（状态栏有�
 
 ### 5.5 快捷键/命令
 
-code-server 里 `Cmd/Ctrl+Shift+P` → `DSH Bridge: Reconnect` 可手动重连桥接（一般不需要，扩展会自动重连）。
+VS Code 命令面板（`Cmd/Ctrl+Shift+P`）：
+
+- `DSH Bridge: Toggle Follow Mode` —— 切换跟随模式（也可以直接点状态栏的 `DSH` 按钮，菜单里有开关）
+- `DSH Bridge: Reconnect` —— 手动重连桥接（一般不需要，扩展会自动重连）
 
 ## 6. 故障排查
 

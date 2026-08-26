@@ -160,6 +160,8 @@ On by default. After each agent `write`/`edit` lands:
 
 - The editor switches to that file's diff view (old left, new right) and scrolls to the first changed line
 - You can uncheck **Follow** in the editor tab's toolbar anytime; recent changes are still recorded (recent list), it just stops popping views
+- **Toggleable from inside the editor too**: click the `DSH · follow/edit` status bar button in VS Code for a menu (toggle follow / reconnect), or Command Palette → `DSH Bridge: Toggle Follow Mode`; the extension sends the request back to DSH and all sides sync
+- Only want edits inside the workspace? Check **Follow workspace files only** in the settings card — writes outside the workspace go to the recent list without popping diffs
 
 ### 5.3 File locking
 
@@ -173,6 +175,7 @@ Settings → Plugins → Plugin Configuration → 内嵌 VSCode 编辑器 (colla
 |---|---|---|---|
 | `editorBackend` | string | `embedded` | Editor backend: `embedded` = embedded code-server; `local` = local desktop VS Code |
 | `follow` | boolean | `true` | Follow DSH edits: pop the red/green diff and jump to the changed line |
+| `followWorkspaceOnly` | boolean | `false` | Follow workspace files only: out-of-workspace changes are recorded but pop no diff |
 | `autoStart` | boolean | `true` | Launch code-server automatically when DSH starts; when off, start it manually from the 编辑器 tab |
 | `port` | number | `0` | code-server listen port; `0` = random (18200–18900); changing it restarts the editor |
 | `codeServerHome` | string | `""` | Manually specify the code-server install directory; empty = auto-lookup in the order above |
@@ -182,7 +185,10 @@ Writes persist to the `dsh-vsceditor` section of `~/.dsh/settings.yaml` and surv
 
 ### 5.5 Shortcuts / commands
 
-In code-server: `Cmd/Ctrl+Shift+P` → `DSH Bridge: Reconnect` reconnects the bridge manually (rarely needed — the extension reconnects on its own).
+In the VS Code command palette (`Cmd/Ctrl+Shift+P`):
+
+- `DSH Bridge: Toggle Follow Mode` — toggle follow mode (or click the `DSH` status bar button, which offers a menu with the switch)
+- `DSH Bridge: Reconnect` — reconnect the bridge manually (rarely needed — the extension reconnects on its own)
 
 ## 6. Troubleshooting
 

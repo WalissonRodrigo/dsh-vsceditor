@@ -2,7 +2,7 @@
   "name": "dsh-bridge",
   "displayName": "DSH Bridge",
   "description": "Bridges a VS Code window (embedded code-server or local desktop) to a DeepSeek Harness host: receives ACP-style session updates (file edits with before/after diff), enforces follow mode and file locks.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "dsh",
   "engines": {
     "vscode": "^1.85.0"
@@ -22,6 +22,10 @@
       {
         "command": "dsh-bridge.reconnect",
         "title": "DSH Bridge: Reconnect"
+      },
+      {
+        "command": "dsh-bridge.toggleFollow",
+        "title": "DSH Bridge: Toggle Follow Mode"
       }
     ]
   }

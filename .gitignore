@@ -4,3 +4,4 @@ vscode-ext/extensions.json
 node_modules/
 *.log
 .DS_Store
+vscode-ext/.obsolete

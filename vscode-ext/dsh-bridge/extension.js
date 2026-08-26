@@ -40,6 +40,14 @@ const EXT_VERSION = (function () {
   catch (e) { return '0.0.0'; }
 })();
 const BRIDGE_FILE = path.join(os.homedir(), '.dsh-editor', 'bridge.json');
+// 桌面模式排障日志（DSH 侧的连接向导失败时指引用户拷贝此文件）。容量封顶 64KB。
+const EXT_LOG_FILE = path.join(os.homedir(), '.dsh-editor', 'bridge-ext.log');
+function fileLog(msg) {
+  try {
+    try { if (fs.statSync(EXT_LOG_FILE).size > 65536) fs.writeFileSync(EXT_LOG_FILE, ''); } catch (e) {}
+    fs.appendFileSync(EXT_LOG_FILE, new Date().toISOString() + ' [pid ' + process.pid + '] ' + msg + '\n');
+  } catch (e) {}
+}
 
 // Current bridge coordinates. mode: 'embedded' | 'desktop' | 'none'.
 const bridge = { mode: 'none', events: '', rpc: '', token: '', workspace: '' };
@@ -92,6 +100,7 @@ function maybePromptWorkspace() {
 
 function log(msg) {
   console.log('[dsh-bridge] ' + msg);
+  fileLog(msg);
   post({ type: 'log', message: String(msg) });
 }
 
@@ -225,10 +234,17 @@ function handleMessage(msg) {
 }
 
 // ---------- SSE client ----------
+let lastLoggedMode = '';
 function connectSSE() {
   resolveBridge();
+  if (bridge.mode !== lastLoggedMode) {
+    lastLoggedMode = bridge.mode;
+    log('mode=' + bridge.mode + (bridge.mode === 'desktop' ? ' workspace=' + (bridge.workspace || '(未设置)') : ''));
+  }
   if (bridge.mode === 'none') { setStatus(false, '等待 DSH'); scheduleReconnect(); return; }
   if (!workspaceMatches()) {
+    const mine = (vscode.workspace.workspaceFolders || []).map((f) => f.uri.fsPath).join(',');
+    log('工作区不匹配：DSH=' + bridge.workspace + ' 本窗口=' + (mine || '(无文件夹)'));
     setStatus(false, bridge.workspace ? '工作区不匹配' : '等待工作区');
     maybePromptWorkspace();
     scheduleReconnect(); // bridge.json may appear / change later
@@ -246,13 +262,14 @@ function connectSSE() {
   }, (res) => {
     if (res.statusCode !== 200) {
       setStatus(false, 'HTTP ' + res.statusCode);
+      log('SSE 握手失败：HTTP ' + res.statusCode);
       res.resume();
       scheduleReconnect();
       return;
     }
     state.connected = true;
     updateStatus();
-    dbg('SSE connected to ' + target);
+    log('SSE 已连接 ' + target);
     post({
       type: 'ready',
       version: EXT_VERSION,
@@ -277,7 +294,12 @@ function connectSSE() {
     res.on('end', () => { state.connected = false; updateStatus(); scheduleReconnect(); });
     res.on('error', () => { state.connected = false; updateStatus(); scheduleReconnect(); });
   });
-  req.on('error', () => { state.connected = false; updateStatus(); scheduleReconnect(); });
+  req.on('error', (e) => {
+    state.connected = false;
+    updateStatus();
+    log('SSE 连接失败：' + (e && e.message ? e.message : String(e)));
+    scheduleReconnect();
+  });
   state.sseReq = req;
 }
 

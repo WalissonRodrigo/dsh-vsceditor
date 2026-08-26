@@ -10,7 +10,7 @@
 // Transport: SSE (host -> extension) + HTTP POST (extension -> host).
 // Message shapes are modeled on ACP session/update semantics:
 //   host -> ext:  hello | follow | edit | lock | unlock | reveal
-//   ext  -> host: ready | opened | log
+//   ext  -> host: ready | ack | log
 const vscode = require('vscode');
 const http = require('http');
 const fs = require('fs');

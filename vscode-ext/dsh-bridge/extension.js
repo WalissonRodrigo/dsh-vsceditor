@@ -1,4 +1,12 @@
-// dsh-bridge — connects this code-server instance to a DeepSeek Harness host.
+// dsh-bridge — connects a VS Code instance to a DeepSeek Harness host.
+// Two modes, auto-detected from the environment (one codebase, no user choice):
+//   embedded: launched by dsh-vsceditor as a code-server child process; bridge
+//             coordinates arrive through DSH_BRIDGE_* env vars.
+//   desktop:  installed into the user's own VS Code; env vars cannot be
+//             injected into an already-running app, so it reads
+//             ~/.dsh-editor/bridge.json ({events, rpc, token, workspace})
+//             written by the host, and only serves while this window's
+//             workspace matches the DSH session workspace.
 // Transport: SSE (host -> extension) + HTTP POST (extension -> host).
 // Message shapes are modeled on ACP session/update semantics:
 //   host -> ext:  hello | follow | edit | lock | unlock | reveal
@@ -6,6 +14,8 @@
 const vscode = require('vscode');
 const http = require('http');
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 // Debug log is opt-in: set DSH_BRIDGE_DEBUG to a non-empty value to append
 // traces to /tmp/dsh-bridge-debug.log.
 const DEBUG = !!process.env.DSH_BRIDGE_DEBUG;
@@ -25,10 +35,61 @@ const state = {
   statusBar: null,
 };
 
-function bridgeUrl() { return process.env.DSH_BRIDGE_URL || ''; }
-function eventsUrl() { return process.env.DSH_BRIDGE_EVENTS || (bridgeUrl() + '/__dsh-editor/events'); }
-function rpcUrl() { return process.env.DSH_BRIDGE_RPC || (bridgeUrl() + '/__dsh-editor/rpc'); }
-function token() { return process.env.DSH_BRIDGE_TOKEN || ''; }
+const EXT_VERSION = (function () {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version || '0.0.0'; }
+  catch (e) { return '0.0.0'; }
+})();
+const BRIDGE_FILE = path.join(os.homedir(), '.dsh-editor', 'bridge.json');
+
+// Current bridge coordinates. mode: 'embedded' | 'desktop' | 'none'.
+const bridge = { mode: 'none', events: '', rpc: '', token: '', workspace: '' };
+
+function envBridge() {
+  if (!process.env.DSH_BRIDGE_EVENTS && !process.env.DSH_BRIDGE_URL) return null;
+  const base = process.env.DSH_BRIDGE_URL || '';
+  return {
+    mode: 'embedded',
+    events: process.env.DSH_BRIDGE_EVENTS || (base + '/__dsh-editor/events'),
+    rpc: process.env.DSH_BRIDGE_RPC || (base + '/__dsh-editor/rpc'),
+    token: process.env.DSH_BRIDGE_TOKEN || '',
+    workspace: '',
+  };
+}
+function fileBridge() {
+  try {
+    const j = JSON.parse(fs.readFileSync(BRIDGE_FILE, 'utf8'));
+    if (j && typeof j.events === 'string' && typeof j.rpc === 'string' && typeof j.token === 'string') {
+      return { mode: 'desktop', events: j.events, rpc: j.rpc, token: j.token, workspace: typeof j.workspace === 'string' ? j.workspace : '' };
+    }
+  } catch (e) {}
+  return null;
+}
+function resolveBridge() {
+  const b = envBridge() || fileBridge();
+  if (b) { bridge.mode = b.mode; bridge.events = b.events; bridge.rpc = b.rpc; bridge.token = b.token; bridge.workspace = b.workspace; }
+  else bridge.mode = 'none';
+  return bridge.mode !== 'none';
+}
+
+// Desktop mode serves only the window whose workspace matches the DSH session
+// workspace; other VS Code windows stay idle (no cross-window event leaks).
+function normFs(p) { return String(p || '').replace(/[\\/]+$/, ''); }
+function workspaceMatches() {
+  if (bridge.mode !== 'desktop') return true;
+  if (!bridge.workspace) return false;
+  const folders = vscode.workspace.workspaceFolders || [];
+  return folders.some((f) => normFs(f.uri.fsPath) === normFs(bridge.workspace));
+}
+let promptedFor = '';
+function maybePromptWorkspace() {
+  if (!bridge.workspace || promptedFor === bridge.workspace) return;
+  promptedFor = bridge.workspace;
+  const ws = bridge.workspace;
+  vscode.window.showInformationMessage('DSH 桥接：本窗口未打开工作区 ' + ws, '打开该工作区').then((pick) => {
+    if (pick) vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(ws), false);
+  });
+}
+
 function log(msg) {
   console.log('[dsh-bridge] ' + msg);
   post({ type: 'log', message: String(msg) });
@@ -37,9 +98,10 @@ function log(msg) {
 // ---------- extension -> host ----------
 function post(msg) {
   try {
-    const u = new URL(rpcUrl());
+    if (!bridge.rpc) return;
+    const u = new URL(bridge.rpc);
     if (u.protocol.indexOf('http') !== 0) return;
-    u.search = (u.search ? u.search + '&' : '?') + 'token=' + encodeURIComponent(token());
+    u.search = (u.search ? u.search + '&' : '?') + 'token=' + encodeURIComponent(bridge.token);
     const body = JSON.stringify(msg);
     const req = http.request({
       method: 'POST',
@@ -164,11 +226,18 @@ function handleMessage(msg) {
 
 // ---------- SSE client ----------
 function connectSSE() {
-  const target = eventsUrl();
-  if (!bridgeUrl() && !process.env.DSH_BRIDGE_EVENTS) { setStatus(false, 'no bridge env'); return; }
+  resolveBridge();
+  if (bridge.mode === 'none') { setStatus(false, '等待 DSH'); scheduleReconnect(); return; }
+  if (!workspaceMatches()) {
+    setStatus(false, bridge.workspace ? '工作区不匹配' : '等待工作区');
+    maybePromptWorkspace();
+    scheduleReconnect(); // bridge.json may appear / change later
+    return;
+  }
+  const target = bridge.events;
   if (state.sseReq) { try { state.sseReq.destroy(); } catch (e) {} state.sseReq = null; }
   const u = new URL(target);
-  u.search = (u.search ? u.search + '&' : '?') + 'token=' + encodeURIComponent(token());
+  u.search = (u.search ? u.search + '&' : '?') + 'token=' + encodeURIComponent(bridge.token);
   const req = http.get({
     hostname: u.hostname,
     port: u.port,
@@ -184,7 +253,12 @@ function connectSSE() {
     state.connected = true;
     updateStatus();
     dbg('SSE connected to ' + target);
-    post({ type: 'ready', version: '0.1.0' });
+    post({
+      type: 'ready',
+      version: EXT_VERSION,
+      mode: bridge.mode,
+      workspace: (vscode.workspace.workspaceFolders || []).map((f) => f.uri.fsPath).join(','),
+    });
     let buf = '';
     res.setEncoding('utf8');
     res.on('data', (chunk) => {
@@ -285,6 +359,12 @@ function activate(context) {
     } else {
       state.lastKnown.set(doc.uri.fsPath, doc.getText());
     }
+  }));
+
+  // Workspace change re-evaluates the desktop-mode gate (and any new window
+  // opened via the "打开该工作区" prompt reconnects on its own).
+  context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
+    if (bridge.mode === 'desktop') connectSSE();
   }));
 
   updateStatus();

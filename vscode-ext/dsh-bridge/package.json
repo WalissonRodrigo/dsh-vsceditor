@@ -1,8 +1,8 @@
 {
   "name": "dsh-bridge",
   "displayName": "DSH Bridge",
-  "description": "Bridges this code-server instance to a DeepSeek Harness host: receives ACP-style session updates (file edits with before/after diff), enforces follow mode and file locks.",
-  "version": "0.1.0",
+  "description": "Bridges a VS Code window (embedded code-server or local desktop) to a DeepSeek Harness host: receives ACP-style session updates (file edits with before/after diff), enforces follow mode and file locks.",
+  "version": "0.2.0",
   "publisher": "dsh",
   "engines": {
     "vscode": "^1.85.0"

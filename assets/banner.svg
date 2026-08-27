@@ -61,7 +61,7 @@
     <circle cx="968" cy="117" r="5.5" fill="#febc2e"/>
     <circle cx="988" cy="117" r="5.5" fill="#28c840"/>
     <g font-family="'SF Mono', Menlo, Consolas, monospace">
-      <rect x="936" y="150" width="132" height="28" rx="6" fill="#182a49"/>
+      <rect x="936" y="150" width="160" height="28" rx="6" fill="#182a49"/>
       <text x="952" y="169" font-size="14" fill="#c9daef">cart.ts ⇄ diff</text>
 
       <!-- code lines -->

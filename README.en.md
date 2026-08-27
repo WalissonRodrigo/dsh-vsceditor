@@ -40,7 +40,7 @@ English | **[中文](README.md)**
 │        lock → file read-only; unlock → restores            │
 └────────────────────────────────────────────────────────────┘
         ▲ iframe (client.js registers a conversation.view
-          tab "编辑器", persistent on body across tab switches)
+          tab "编辑器" ("Editor"), persistent on body across tab switches)
 ```
 
 Message semantics follow ACP `session/update`: `edit {path, oldText, newText, firstLine}` is pushed by the host with computed diff stats; the extension renders it. The host mounts unscoped, so it sees tool events from all sessions (scoped events flow up the scope chain).
@@ -72,7 +72,7 @@ dsh plugin --profile web add /path/to/dsh-vsceditor
 
 ### 4.2 Install code-server (required for embedded mode)
 
-> ⚠️ **Do not skip this if you want the default embedded editor.** The plugin does not ship the code-server runtime (~100MB). Without it, embedded mode is unavailable — the 编辑器 tab will report "code-server not found" and offer to switch you to **local VS Code mode** (feature-equivalent, see 5.1).
+> ⚠️ **Do not skip this if you want the default embedded editor.** The plugin does not ship the code-server runtime (~100MB). Without it, embedded mode is unavailable — the Editor (编辑器) tab will report "code-server not found" and offer to switch you to **local VS Code mode** (feature-equivalent, see 5.1).
 
 **Recommended: install globally, shared by all workspaces:**
 
@@ -128,13 +128,13 @@ Note: this path is not widely verified; it only guarantees local 127.0.0.1 use. 
 dsh web
 ```
 
-An 编辑器 (Editor) tab appears in the top bar; click it and wait a few seconds for code-server to come up. The status dot next to the tab label: gray = loading, green = extension connected, yellow = waiting for the extension, red = not running / code-server not installed / bridge not mounted.
+An Editor tab appears in the top bar; click it and wait a few seconds for code-server to come up. The status dot next to the tab label: gray = loading, green = extension connected, yellow = waiting for the extension, red = not running / code-server not installed / bridge not mounted.
 
 ## 5. Usage
 
 ### 5.1 Local VS Code mode
 
-Switch **Editor backend** to **Local VS Code** under Settings → Plugins → Plugin Configuration (mutually exclusive with embedded code-server, applies instantly), or click the **connection wizard** button on the 编辑器 tab's status card:
+Switch **Editor backend** to **Local VS Code** under Settings → Plugins → Plugin Configuration (mutually exclusive with embedded code-server, applies instantly), or click the **connection wizard** button on the Editor tab's status card:
 
 1. The plugin auto-detects local VS Code (macOS `.app` and Spotlight, Windows standard install dirs and `where`, Linux `/usr/bin` and `which`); if not found, set the path manually in settings
 2. Without the bridge extension, the status card shows an **Install extension into local VS Code** button — one click copies it to `~/.vscode/extensions/` (home dir, no privileges needed); on failure it prints the manual copy source/target paths
@@ -169,14 +169,14 @@ When the agent starts writing a file, that file becomes read-only in the editor 
 
 ### 5.4 Settings card
 
-Settings → Plugins → Plugin Configuration → 内嵌 VSCode 编辑器 (collapsed by default, click the header to expand):
+Settings → Plugins → Plugin Configuration → "内嵌 VSCode 编辑器" (Embedded VS Code Editor; collapsed by default, click the header to expand):
 
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `editorBackend` | string | `embedded` | Editor backend: `embedded` = embedded code-server; `local` = local desktop VS Code |
 | `follow` | boolean | `true` | Follow DSH edits: pop the red/green diff and jump to the changed line |
 | `followWorkspaceOnly` | boolean | `false` | Follow workspace files only: out-of-workspace changes are recorded but pop no diff |
-| `autoStart` | boolean | `true` | Launch code-server automatically when DSH starts; when off, start it manually from the 编辑器 tab |
+| `autoStart` | boolean | `true` | Launch code-server automatically when DSH starts; when off, start it manually from the Editor tab |
 | `port` | number | `0` | code-server listen port; `0` = random (18200–18900); changing it restarts the editor |
 | `codeServerHome` | string | `""` | Manually specify the code-server install directory; empty = auto-lookup in the order above |
 | `vscodePath` | string | `""` | Manually specify the local VS Code path (code CLI or .app/Code.exe); empty = auto-detect |
@@ -192,14 +192,14 @@ In the VS Code command palette (`Cmd/Ctrl+Shift+P`):
 
 ## 6. Troubleshooting
 
-**The 编辑器 tab shows "code-server not installed" / "code-server not found"**
+**The Editor tab shows "code-server not installed" / "code-server not found"**
 code-server is not installed or not on the lookup path. Two options: ① run the install script in 4.2 (or fill in the `code-server directory` in the settings card); ② if you don't want it, click the **Use local VS Code →** button on the page — the plugin switches to local mode and opens the connection wizard.
 
 **Local mode stuck at "waiting for workspace trust" (yellow dot)**
 VS Code Restricted Mode is blocking edit sync. Trust the workspace in VS Code (Command Palette → `Workspaces: Manage Workspace Trust`); it resumes automatically without Reload. See the "Workspace Trust" subsection of 5.1.
 
 **Stuck at "waiting for extension" (yellow dot)**
-The extension host only starts while a code-server window is open. Click into the 编辑器 tab and wait a few seconds; if the page is stale (code-server restarted), refresh the whole DSH page.
+The extension host only starts while a code-server window is open. Click into the Editor tab and wait a few seconds; if the page is stale (code-server restarted), refresh the whole DSH page.
 
 **Edits don't pop diffs**
 ① Is the tab status dot green? ② Is **Follow** checked in the toolbar? ③ Extension logs: restart DSH with `DSH_BRIDGE_DEBUG=1` and read `/tmp/dsh-bridge-debug.log` (local mode: `~/.dsh-editor/bridge-ext.log`).

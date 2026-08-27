@@ -1,6 +1,6 @@
 {
   "name": "dsh-vsceditor",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "VS Code panel for DeepSeek Harness sessions — embedded code-server or your local desktop VS Code — with ACP-style edit sync, red/green diff follow mode and file locking via the bundled dsh-bridge VS Code extension.",
   "keywords": [
     "dsh",
@@ -36,6 +36,9 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-client-runtime": ">=0.0.1-rc.1 <0.1.0 || >=0.1.0-rc.1 <0.1.1 || >=0.1.1-rc.1 <0.2.0-0"
   },
   "dsh": {
     "bundle": {

@@ -73,7 +73,9 @@ dsh plugin --profile web add /path/to/dsh-vsceditor
 
 > ⚠️ **想用默认的内嵌编辑器，这一步不可跳过。** 插件本体不带 code-server 运行时（约 100MB）。不装的话内嵌模式不可用——「编辑器」标签页会提示"未找到 code-server"并引导你切换到**本机 VS Code 模式**（功能等价，见 5.1）。
 
-**推荐全局安装，所有工作区共用一份**：
+**方式一：一键安装（推荐）**。打开「编辑器」标签页（或 设置 → 插件配置 → 内嵌 VSCode 编辑器），点击 **「⬇ 一键安装 code-server」**，弹窗会实时显示下载/安装/启动进度，完成后自动进入编辑器。安装到 `~/.dsh-editor`，所有工作区共用一份。
+
+**方式二：命令行全局安装**（与一键安装等效，适合无法打开面板时）：
 
 ```sh
 sh ~/.dsh/profiles/web/node_modules/dsh-vsceditor/scripts/install-code-server.sh ~/.dsh-editor
@@ -192,7 +194,7 @@ VS Code 命令面板（`Cmd/Ctrl+Shift+P`）：
 ## 6. 故障排查
 
 **「编辑器」标签页显示"未安装 code-server" / "未找到 code-server"**
-没装 code-server 或不在查找路径上。两个选择：① 运行 4.2 的安装脚本（或在设置卡片填 `code-server 目录`）；② 不想装就点页面上的「改用本机 VS Code →」按钮，插件会切到本机模式并弹出连接向导。
+没装 code-server 或不在查找路径上。三个选择：⓪ 点页面上的「⬇ 一键安装 code-server」（推荐）；① 运行 4.2 的安装脚本（或在设置卡片填 `code-server 目录`）；② 不想装就点页面上的「改用本机 VS Code →」按钮，插件会切到本机模式并弹出连接向导。
 
 **本机模式一直"等待信任工作区"（黄点）**
 VS Code 受限模式拦截了编辑同步。在 VS Code 里信任该工作区（命令面板 → `Workspaces: Manage Workspace Trust`），信任后自动恢复，不用 Reload。详见 5.1 的「工作区信任」小节。

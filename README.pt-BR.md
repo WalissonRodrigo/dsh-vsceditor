@@ -1,6 +1,6 @@
 # dsh-vsceditor
 
-![dsh-vsceditor banner](assets/banner.svg)
+![dsh-vsceditor banner](assets/banner.pt-BR.svg)
 
 [English](README.md) | [简体中文](README.zh.md) | **Português (Brasil)** | [Español](README.es.md)
 

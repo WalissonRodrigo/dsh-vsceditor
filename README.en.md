@@ -180,6 +180,7 @@ Settings → Plugins → Plugin Configuration → "内嵌 VSCode 编辑器" (Emb
 | `port` | number | `0` | code-server listen port; `0` = random (18200–18900); changing it restarts the editor |
 | `codeServerHome` | string | `""` | Manually specify the code-server install directory; empty = auto-lookup in the order above |
 | `vscodePath` | string | `""` | Manually specify the local VS Code path (code CLI or .app/Code.exe); empty = auto-detect |
+| `language` | string | `auto` | UI language: `auto` = follow browser language; or explicitly set `zh`, `en`, `pt-BR`, `es` |
 
 Writes persist to the `dsh-vsceditor` section of `~/.dsh/settings.yaml` and survive restarts. You can also add `config:` to the plugin row in `~/.dsh/profiles/web/cordis.patch.yml` as a composition-level base (user layer overrides base layer).
 

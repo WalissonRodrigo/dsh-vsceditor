@@ -40,13 +40,24 @@ echo "下载 code-server v${VERSION} (${PKG}) ..."
 echo "  $URL"
 
 TMP="$(mktemp -d)"
+CURL_PID=""
+# 插件端"取消安装"会给本脚本发 TERM：必须把下载中的 curl 一起带走，
+# 否则 sh 死后 curl 变孤儿继续下载；退出时 EXIT trap 清理临时目录。
+term_handler() {
+  if [ -n "$CURL_PID" ]; then kill "$CURL_PID" 2>/dev/null; fi
+  exit 143
+}
+trap term_handler TERM INT
 trap 'rm -rf "$TMP"' EXIT
 
-if ! curl -fL --retry 3 -o "$TMP/code-server.tar.gz" "$URL"; then
+curl -fL --retry 3 --progress-bar -o "$TMP/code-server.tar.gz" "$URL" &
+CURL_PID=$!
+if ! wait "$CURL_PID"; then
   echo "下载失败。网络受限时可手动下载上述地址，解压后把 code-server-${VERSION}-${PKG} 目录" >&2
   echo "重命名为 code-server 并放到 $DEST/ 下。" >&2
   exit 1
 fi
+CURL_PID=""
 
 mkdir -p "$DEST"
 tar -xzf "$TMP/code-server.tar.gz" -C "$TMP"

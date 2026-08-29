@@ -74,7 +74,7 @@ dsh plugin --profile web add /path/to/dsh-vsceditor
 
 > ⚠️ **Do not skip this if you want the default embedded editor.** The plugin does not ship the code-server runtime (~100MB). Without it, embedded mode is unavailable — the Editor (编辑器) tab will report "code-server not found" and offer to switch you to **local VS Code mode** (feature-equivalent, see 5.1).
 
-**Option 1: one-click install (recommended).** Open the Editor (编辑器) tab (or Settings → Plugins → 内嵌 VSCode 编辑器) and click **「⬇ 一键安装 code-server」** — a dialog shows live download/install/startup progress and the editor opens automatically when done. Installs to `~/.dsh-editor`, shared by all workspaces.
+**Option 1: one-click install (recommended).** Open the Editor (编辑器) tab (or Settings → Plugins → 内嵌 VSCode 编辑器) and click **「⬇ 一键安装 code-server」** — a dialog shows the download URL, live progress percentage, and install/startup steps (cancellable at any time), and the editor opens automatically when done. Installs to `~/.dsh-editor`, shared by all workspaces.
 
 **Option 2: global CLI install** (equivalent; useful when the panel is unreachable):
 

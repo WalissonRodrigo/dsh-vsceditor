@@ -99,6 +99,8 @@ sh ~/.dsh/profiles/web/node_modules/dsh-vsceditor/scripts/install-code-server.sh
 
 目录下需存在 `code-server/bin/code-server`。
 
+> 📁 **编辑器的运行数据（user-data、配置、日志）不放在工作区里**，统一存放在全局 `~/.dsh-editor/workspaces/<哈希>-<工作区名>/` 下按工作区隔离（与 VS Code 的用户级数据目录同一范式），你的工作区目录不会被污染。旧版本曾存放在 `<工作区>/.dsh-editor`，已存在该目录的工作区会继续沿用以保留数据。
+
 #### Windows（实验性）
 
 code-server 官方[不发布 Windows 构建](https://github.com/coder/code-server/issues/1397)，且直接 `npm install -g code-server` 在 Windows 上是坏的（postinstall 脚本与 argon2 原生编译都会失败）。本插件提供 `scripts/install-code-server.ps1` 绕过这两个坑，手法参考 [naspenang/code-server-windows](https://github.com/naspenang/code-server-windows)（MIT）：跳过 postinstall、手动补装依赖、**从本机已安装的桌面版 VS Code 借用原生模块**。
@@ -220,7 +222,7 @@ DSH 退出时不会强杀已脱离的子进程。手动清理：`pkill -f 'code-
 dsh plugin --profile web remove dsh-vsceditor
 ```
 
-再删掉运行数据（可选）：`<工作区>/.dsh-editor`、`~/.dsh-editor/bridge.json`、`~/.vscode/extensions/dsh.dsh-bridge`、`~/.dsh/settings.yaml` 里的 `dsh-vsceditor` 节。
+再删掉运行数据（可选）：`~/.dsh-editor`（含 `workspaces/` 下按工作区隔离的运行数据；旧版可能还有 `<工作区>/.dsh-editor`）、`~/.vscode/extensions/dsh.dsh-bridge`、`~/.dsh/settings.yaml` 里的 `dsh-vsceditor` 节。
 
 ## 8. 安全说明
 

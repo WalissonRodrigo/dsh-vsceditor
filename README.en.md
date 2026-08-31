@@ -100,6 +100,8 @@ Manual install also works: extract code-server into any of these locations (in l
 
 The directory must contain `code-server/bin/code-server`.
 
+> 📁 **Editor runtime data (user-data, config, logs) is NOT stored in your workspace** — it lives in the global `~/.dsh-editor/workspaces/<hash>-<workspace-name>/`, isolated per workspace (the same model as VS Code's user-level data directory), so your project folder stays clean. Older versions used `<workspace>/.dsh-editor`; workspaces that already have one keep using it to preserve their data.
+
 #### Windows (experimental)
 
 code-server [does not publish Windows builds](https://github.com/coder/code-server/issues/1397), and a plain `npm install -g code-server` is broken on Windows (both the postinstall script and argon2 native compilation fail). This plugin ships `scripts/install-code-server.ps1` to work around both, with a technique inspired by [naspenang/code-server-windows](https://github.com/naspenang/code-server-windows) (MIT): skip postinstall, install dependencies manually, and **borrow native modules from an installed desktop VS Code**.
@@ -221,7 +223,7 @@ A pitfall from this plugin's 0.1.x era: a settings schema missing `toJSON` takes
 dsh plugin --profile web remove dsh-vsceditor
 ```
 
-Optionally remove runtime data: `<workspace>/.dsh-editor`, `~/.dsh-editor/bridge.json`, `~/.vscode/extensions/dsh.dsh-bridge`, and the `dsh-vsceditor` section of `~/.dsh/settings.yaml`.
+Optionally remove runtime data: `~/.dsh-editor` (including per-workspace runtime data under `workspaces/`; legacy installs may also have `<workspace>/.dsh-editor`), `~/.vscode/extensions/dsh.dsh-bridge`, and the `dsh-vsceditor` section of `~/.dsh/settings.yaml`.
 
 ## 8. Security notes
 
